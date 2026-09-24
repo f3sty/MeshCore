@@ -34,7 +34,7 @@ static const Module::RfSwitchMode_t rfswitch_table[] = {
   { LR11x0::MODE_RX,     {HIGH, LOW  }}, // RFSW0 high
   { LR11x0::MODE_TX,     {LOW,  HIGH }}, // RFSW1 high
   { LR11x0::MODE_TX_HP,  {LOW,  HIGH }}, // RFSW1 high
-  { LR11x0::MODE_TX_HF,  {LOW,  HIGH }}, // RFSW1 high
+  { LR11x0::MODE_TX_HF,  {LOW,  LOW  }},
   { LR11x0::MODE_GNSS,   {LOW,  LOW  }},
   { LR11x0::MODE_WIFI,   {LOW,  LOW  }},
   END_OF_MODE_TABLE,

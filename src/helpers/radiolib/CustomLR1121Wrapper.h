@@ -3,15 +3,22 @@
 #include "CustomLR1121.h"
 #include "RadioLibWrappers.h"
 #include "LR11x0Reset.h"
+#include <math.h>
 
 class CustomLR1121Wrapper : public RadioLibWrapper {
 public:
   CustomLR1121Wrapper(CustomLR1121& radio, mesh::MainBoard& board) : RadioLibWrapper(radio, board) { }
 
   void setParams(float freq, float bw, uint8_t sf, uint8_t cr) override {
+    const bool hf_bw_mode =
+        (freq > 1000.0f) &&
+        ((fabsf(bw - 203.125f) <= 0.001f) ||
+         (fabsf(bw - 406.25f) <= 0.001f) ||
+         (fabsf(bw - 812.5f) <= 0.001f));
+
     ((CustomLR1121 *)_radio)->setFrequency(freq);
     ((CustomLR1121 *)_radio)->setSpreadingFactor(sf);
-    ((CustomLR1121 *)_radio)->setBandwidth(bw);
+    ((CustomLR1121 *)_radio)->setBandwidth(bw, hf_bw_mode);
     ((CustomLR1121 *)_radio)->setCodingRate(cr);
     updatePreamble(sf);
     PacketMillis pm = calcMaxPacketMillis(sf, bw, cr, preambleLengthForSF(sf));
