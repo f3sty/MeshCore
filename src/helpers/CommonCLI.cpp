@@ -44,6 +44,9 @@ void CommonCLI::loadPrefs(FILESYSTEM* fs) {
   //    fs->remove("/com_prefs");  // remove old
     }
   }
+#ifdef LORA_TX_POWER_PROFILE
+  _prefs->tx_power_dbm = constrain(_prefs->tx_power_dbm, MIN_LORA_TX_POWER, MAX_LORA_TX_POWER);
+#endif
 }
 
 void CommonCLI::loadPrefsInt(FILESYSTEM* fs, const char* filename) {  // Legacy prefs loader
@@ -706,7 +709,17 @@ void CommonCLI::handleSetCmd(uint32_t sender_timestamp, char* command, char* rep
       strcpy(reply, "OK");
     }
   } else if (memcmp(config, "tx ", 3) == 0) {
+#ifdef LORA_TX_POWER_PROFILE
+    int power = atoi(&config[3]);
+    if (power < MIN_LORA_TX_POWER) power = MIN_LORA_TX_POWER;
+    if (power > MAX_LORA_TX_POWER) {
+      sprintf(reply, "Error, TX power must be %d..%d dBm", MIN_LORA_TX_POWER, MAX_LORA_TX_POWER);
+      return;
+    }
+    _prefs->tx_power_dbm = power;
+#else
     _prefs->tx_power_dbm = atoi(&config[3]);
+#endif
     savePrefs();
     _callbacks->setTxPower(_prefs->tx_power_dbm);
     strcpy(reply, "OK");
