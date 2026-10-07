@@ -58,6 +58,18 @@ public:
 #endif
   }
 
+  void sleep(uint32_t secs) override {
+#if DAKE_RGB_PACKET_LED
+    // Let the receive flash expire before sleeping, so its timeout can run in the main loop.
+    updatePacketLed();
+    if (receiving_flash) {
+      delay(1);
+      return;
+    }
+#endif
+    ESP32Board::sleep(secs);
+  }
+
   uint16_t getBattMilliVolts() override { return 0; }
   const char* getManufacturerName() const override { return "DakeFPV 2.4G Nano Pro"; }
 };
