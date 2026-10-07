@@ -634,7 +634,10 @@ bool EnvironmentSensorManager::begin() {
 
   // Scan the I2C bus before touching any sensor library.
   bool detected[128] = {};
+  // Boards with disabled I2C should not probe an uninitialized Wire instance.
+#if (ENV_PIN_SDA && ENV_PIN_SCL) || !defined(PIN_BOARD_SDA) || !defined(PIN_BOARD_SCL) || (PIN_BOARD_SDA >= 0 && PIN_BOARD_SCL >= 0)
   scanI2CBus(TELEM_WIRE, detected);
+#endif
 
   // Walk the sensor table and initialize only detected devices.
   _active_sensor_count = 0;

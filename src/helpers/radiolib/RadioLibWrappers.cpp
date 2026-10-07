@@ -11,6 +11,10 @@
 #define NUM_NOISE_FLOOR_SAMPLES  64
 #define SAMPLING_THRESHOLD  14
 
+#ifndef MIN_NOISE_FLOOR_DBM
+#define MIN_NOISE_FLOOR_DBM -120
+#endif
+
 static volatile uint8_t state = STATE_IDLE;
 
 // this function is called when a complete packet
@@ -95,8 +99,8 @@ void RadioLibWrapper::loop() {
     }
   } else if (_num_floor_samples >= NUM_NOISE_FLOOR_SAMPLES && _floor_sample_sum != 0) {
     _noise_floor = _floor_sample_sum / NUM_NOISE_FLOOR_SAMPLES;
-    if (_noise_floor < -120) {
-      _noise_floor = -120;    // clamp to lower bound of -120dBi
+    if (_noise_floor < MIN_NOISE_FLOOR_DBM) {
+      _noise_floor = MIN_NOISE_FLOOR_DBM;  // lower bound in the driver's RSSI units
     }
     _floor_sample_sum = 0;
 
