@@ -7,7 +7,13 @@ static SPIClass spi(FSPI);
 RADIO_CLASS radio = new Module(P_LORA_NSS, P_LORA_DIO_1, P_LORA_RESET, P_LORA_BUSY, spi);
 WRAPPER_CLASS radio_driver(radio, board);
 ESP32RTCClock rtc_clock;
+#if ENV_INCLUDE_GPS
+  #include <helpers/sensors/MicroNMEALocationProvider.h>
+  MicroNMEALocationProvider nmea(Serial1, &rtc_clock);
+  EnvironmentSensorManager sensors(nmea);
+#else
 EnvironmentSensorManager sensors;
+#endif
 
 bool radio_init() {
   // No external RTC or I2C bus on this receiver.
