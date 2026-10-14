@@ -144,14 +144,15 @@ void setup() {
   WiFiInit();
   modem = new KissModem(client, identity, rng, radio_driver, board, sensors);
 #else
+#if defined(ESP32) && ARDUINO_USB_MODE && ARDUINO_USB_CDC_ON_BOOT
+  // Allocate before begin(): resizing an active HWCDC buffer can race its ISR.
+  Serial.setTxTimeoutMs(USB_TX_TIMEOUT_MS);
+  Serial.setTxBufferSize(USB_TX_BUFFER_SIZE);
+#endif
   Serial.begin(115200);
   uint32_t start = millis();
   while (!Serial && millis() - start < 3000) delay(10);
   delay(100);
-#if defined(ESP32) && ARDUINO_USB_MODE
-  Serial.setTxTimeoutMs(USB_TX_TIMEOUT_MS);
-  Serial.setTxBufferSize(USB_TX_BUFFER_SIZE);
-#endif
   modem = new KissModem(Serial, identity, rng, radio_driver, board, sensors);
 #endif
 
@@ -159,7 +160,14 @@ void setup() {
   modem->setTxPowerCallback(onSetTxPower);
   modem->setGetCurrentRssiCallback(onGetCurrentRssi);
   modem->setGetStatsCallback(onGetStats);
-  modem->begin();
+#ifdef LORA_CR
+  const uint8_t initial_cr = LORA_CR;
+#else
+  const uint8_t initial_cr = 5;
+#endif
+  modem->begin(RadioConfig{(uint32_t)(LORA_FREQ * 1000000.0),
+                           (uint32_t)(LORA_BW * 1000.0),
+                           LORA_SF, initial_cr, LORA_TX_POWER});
 
   board.onBootComplete();
 }

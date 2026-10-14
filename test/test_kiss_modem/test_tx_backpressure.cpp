@@ -202,6 +202,19 @@ TEST_F(KissModemFixture, PingResponseKeepsStandardKissFraming) {
   EXPECT_EQ(serial.writesSnapshot(), expected);
 }
 
+TEST_F(KissModemFixture, ReportsBootRadioSettingsBeforeHostConfiguration) {
+  modem.begin(RadioConfig{2483000000U, 406250U, 11, 5, 13});
+  serial.pushRx({KISS_FEND, KISS_CMD_SETHARDWARE, HW_CMD_GET_RADIO, KISS_FEND,
+                 KISS_FEND, KISS_CMD_SETHARDWARE, HW_CMD_GET_TX_POWER, KISS_FEND});
+  modem.loop();
+  const std::vector<uint8_t> expected = {
+      KISS_FEND, KISS_CMD_SETHARDWARE, HW_RESP(HW_CMD_GET_RADIO),
+      KISS_FESC, KISS_TFEND, 0x92, 0xff, 0x93,
+      0xea, 0x32, 0x06, 0x00, 11, 5, KISS_FEND,
+      KISS_FEND, KISS_CMD_SETHARDWARE, HW_RESP(HW_CMD_GET_TX_POWER), 13, KISS_FEND};
+  EXPECT_EQ(serial.writesSnapshot(), expected);
+}
+
 TEST_F(KissModemFixture, PingResponseKeepsFramingWithPartialBulkWrites) {
   serial.setMaxWriteChunk(TEST_PARTIAL_WRITE_CHUNK);
   serial.pushRx({KISS_FEND, KISS_CMD_SETHARDWARE, HW_CMD_PING, KISS_FEND});

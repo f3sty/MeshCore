@@ -40,6 +40,11 @@ void KissModem::begin() {
   resetOutputQueue();
 }
 
+void KissModem::begin(const RadioConfig& config) {
+  begin();
+  _config = config;
+}
+
 void KissModem::resetOutputQueue() {
   _tx_frame_head = 0;
   _tx_frame_tail = 0;

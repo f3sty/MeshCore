@@ -212,6 +212,7 @@ public:
             mesh::Radio& radio, mesh::MainBoard& board, SensorManager& sensors);
 
   void begin();
+  void begin(const RadioConfig& config);
   void loop();
 
   void setRadioCallback(SetRadioCallback cb) { _setRadioCallback = cb; }
