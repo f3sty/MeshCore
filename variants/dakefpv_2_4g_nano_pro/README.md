@@ -8,7 +8,7 @@ and [DakeFPV 1w overlay](https://github.com/ExpressLRS/targets/blob/master/targe
 - Default radio settings: 2483 MHz, 406.25 kHz, SF11, CR4/5.
   The board accepts 2400–2500 MHz only.
 - TX settings represent **nominal board output dBm**, with a range of 14–30
-  and a default/maximum of 30 (1 W). The driver translates output to chip drive
+  and a default of 20 (100mW). The driver translates output to chip drive
   using the ELRS calibration table. Intermediate settings use interpolation.
 - DCDC regulation is enabled after initialization.
 
@@ -24,7 +24,7 @@ uses the UART pads for its serial protocol; this receiver has no native USB.
 
 ## Optional RGB packet LED
 
-To enable activity LED, uncomment `-D DAKE_RGB_PACKET_LED=1` in the shared
+To disable activity LED, comment out `-D DAKE_RGB_PACKET_LED=1` in the shared
 variant build flags. Optional `DAKE_RGB_LED_BRIGHTNESS` sets each active
 color's intensity from 0 to 255 (default 16).
 
@@ -35,6 +35,8 @@ color's intensity from 0 to 255 (default 16).
   Transmit takes priority over a receive flash.
 - Off when idle. The receive flash uses a timer, with no 150 ms blocking delay,
   and LED updates run outside interrupts.
+- Enabling the RGB LED may prevent powersaving sleep being entered for up to 150ms
+  after receiving a packet. For maximum power saving, disable the RGB LED.
 
 
 ## Output power settings
