@@ -44,6 +44,9 @@ void CommonCLI::loadPrefs(FILESYSTEM* fs) {
   //    fs->remove("/com_prefs");  // remove old
     }
   }
+#ifdef LORA_TX_POWER_PROFILE
+  _prefs->tx_power_dbm = constrain(_prefs->tx_power_dbm, MIN_LORA_TX_POWER, MAX_LORA_TX_POWER);
+#endif
 }
 
 void CommonCLI::loadPrefsInt(FILESYSTEM* fs, const char* filename) {  // Legacy prefs loader
