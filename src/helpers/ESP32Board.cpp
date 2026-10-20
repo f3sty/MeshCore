@@ -3,7 +3,7 @@
 #include "ESP32Board.h"
 #include <target.h>
 
-#if defined(ADMIN_PASSWORD) && !defined(DISABLE_WIFI_OTA)   // Repeater or Room Server only
+#if (defined(ADMIN_PASSWORD) || defined(ENABLE_COMPANION_OTA)) && !defined(DISABLE_WIFI_OTA)
 #include <WiFi.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
@@ -12,18 +12,26 @@
 #include <SPIFFS.h>
 
 bool ESP32Board::startOTAUpdate(const char* id, char reply[]) {
+  static AsyncWebServer* server = nullptr;
+  if (server != nullptr) {
+    sprintf(reply, "Started: http://%s/update", WiFi.softAPIP().toString().c_str());
+    return true;
+  }
+  if (!WiFi.softAP("MeshCore-OTA", NULL)) {
+    strcpy(reply, "Error: could not start OTA Wi-Fi");
+    return false;
+  }
   inhibit_sleep = true;   // prevent sleep during OTA
-  WiFi.softAP("MeshCore-OTA", NULL);
 
   sprintf(reply, "Started: http://%s/update", WiFi.softAPIP().toString().c_str());
   MESH_DEBUG_PRINTLN("startOTAUpdate: %s", reply);
 
   static char id_buf[60];
-  sprintf(id_buf, "%s (%s)", id, getManufacturerName());
-  static char home_buf[90];
-  sprintf(home_buf, "<H2>Hi! I am a MeshCore Repeater. ID: %s</H2>", id);
+  snprintf(id_buf, sizeof(id_buf), "%s (%s)", id, getManufacturerName());
+  static char home_buf[128];
+  snprintf(home_buf, sizeof(home_buf), "<H2>MeshCore OTA. ID: %s</H2><a href='/update'>Update firmware</a>", id);
 
-  AsyncWebServer* server = new AsyncWebServer(80);
+  server = new AsyncWebServer(80);
 
   server->on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(200, "text/html", home_buf);

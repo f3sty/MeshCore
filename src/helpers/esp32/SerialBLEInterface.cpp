@@ -24,7 +24,10 @@ void SerialBLEInterface::begin(const char* prefix, char* name, uint32_t pin_code
   sprintf(dev_name, "%s%s", prefix, name);
 
   // Create the BLE Device
+  BLE_DEBUG_PRINTLN("initializing %s (free heap=%u, largest block=%u)", dev_name,
+    ESP.getFreeHeap(), ESP.getMaxAllocHeap());
   BLEDevice::init(dev_name);
+  BLE_DEBUG_PRINTLN("device initialized (free heap=%u)", ESP.getFreeHeap());
   BLEDevice::setSecurityCallbacks(this);
   BLEDevice::setMTU(MAX_FRAME_SIZE);
 
@@ -150,6 +153,7 @@ void SerialBLEInterface::enable() {
   //pServer->getAdvertising()->setMaxInterval(1000);
 
   pServer->getAdvertising()->start();
+  BLE_DEBUG_PRINTLN("advertising started (free heap=%u)", ESP.getFreeHeap());
   adv_restart_time = 0;
 }
 

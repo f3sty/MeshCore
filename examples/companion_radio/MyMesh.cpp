@@ -2105,6 +2105,15 @@ bool MyMesh::handleCommand(const char* command, uint32_t sender_timestamp, char*
     return true;
   }
 
+#ifdef ENABLE_COMPANION_OTA
+  if (strcmp(command, "start ota") == 0) {
+    if (!board.startOTAUpdate(_prefs.node_name, reply)) {
+      strcpy(reply, "Error: OTA unavailable");
+    }
+    return true;
+  }
+#endif
+
   if (strcmp(command, "poweroff") == 0 || strcmp(command, "shutdown") == 0) {
     board.powerOff(); // doesn't return
     return true;
