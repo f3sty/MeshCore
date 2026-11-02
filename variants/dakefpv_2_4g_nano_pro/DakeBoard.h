@@ -9,8 +9,18 @@
 #define DAKE_RGB_LED_BRIGHTNESS 16
 #endif
 
+#if defined(DAKE_OTA_STOP_BLE) && defined(ENABLE_COMPANION_OTA) && !defined(DISABLE_WIFI_OTA)
+void dakeStopBluetoothForOTA();
+#endif
+
 class DakeBoard : public ESP32Board {
   bool ota_active = false;
+#if defined(DAKE_OTA_STOP_BLE) && defined(ENABLE_COMPANION_OTA) && !defined(DISABLE_WIFI_OTA)
+  bool ota_pending = false;
+  bool ota_ble_released = false;
+  uint32_t ota_requested_at = 0;
+  char ota_id[60] = {};
+#endif
 #if defined(ENABLE_COMPANION_OTA) && !defined(DISABLE_WIFI_OTA)
   bool button_raw = false;
   bool button_pressed = false;
@@ -77,8 +87,27 @@ public:
   }
 
 #if defined(ENABLE_COMPANION_OTA) && !defined(DISABLE_WIFI_OTA)
+  bool startDakeOTA(const char* id, char reply[]);
+
   bool startOTAUpdate(const char* id, char reply[]) override {
-    if (!ESP32Board::startOTAUpdate(id, reply)) return false;
+#ifdef DAKE_OTA_STOP_BLE
+    if (!ota_active) {
+      if (ota_ble_released) {
+        strcpy(reply, "Error: reboot to restore BLE before retrying OTA");
+        return false;
+      }
+      if (!ota_pending) {
+        strncpy(ota_id, id, sizeof(ota_id) - 1);
+        ota_id[sizeof(ota_id) - 1] = 0;
+        ota_requested_at = millis();
+        ota_pending = true;
+        inhibit_sleep = true;
+      }
+      strcpy(reply, "Starting OTA: BLE disconnects; join MeshCore-OTA at http://192.168.4.1/update");
+      return true;
+    }
+#endif
+    if (!startDakeOTA(id, reply)) return false;
     ota_active = true;
     updatePacketLed();
     return true;
@@ -88,6 +117,25 @@ public:
     ESP32Board::loop();
     if (ota_active) return;
     uint32_t now = millis();
+#ifdef DAKE_OTA_STOP_BLE
+    if (ota_pending) {
+      // Allow the queued command reply to reach the BLE client before teardown.
+      if (uint32_t(now - ota_requested_at) >= 1000) {
+        ota_pending = false;
+        dakeStopBluetoothForOTA();
+        ota_ble_released = true;
+        char reply[128];
+        if (startDakeOTA(ota_id, reply)) {
+          ota_active = true;
+          updatePacketLed();
+        } else {
+          Serial.println("OTA: startup failed; reboot to restore Bluetooth");
+        }
+        Serial.println(reply);
+      }
+      return;
+    }
+#endif
     bool pressed = digitalRead(9) == LOW;
     if (pressed != button_raw) {
       button_raw = pressed;

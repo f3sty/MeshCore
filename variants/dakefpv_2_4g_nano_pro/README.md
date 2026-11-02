@@ -24,21 +24,25 @@ uses the UART pads for its serial protocol due to no native USB support on this 
 ## Initial flashing
 
 These modules ship pre-installed with ExpressLRS firmware. You can use the ELRS OTA Update
-function to flash meshcore firmware. Use a **merged** bin.
+function to flash MeshCore's **application-only** `firmware.bin`. The standard ExpressLRS
+partition layout was kept for this variant.
 The process is:
 - Power the module
 - Hold the user button down for 5 seconds. The RGB LED will change to indicate OTA mode.
 - Connect to the **ExpressLRS RX** wifi network, default password is **expresslrs**.
 - Point a broswer to http://10.0.0.1/ 
-- Find the **Update** tab, select your firmware-merged.bin file, and click 'Update'.
-You may get an error from the OTA flasher, but it should still succeed. 
+- Find the **Update** tab, select your `firmware.bin` file, and click 'Update'.
+- ExpressLRS may report a target mismatch for MeshCore, but flashing should complete properly anyway.
  
 
 ## Companion firmware updates over Wi-Fi
 
-The BLE companion retains a 500-contact table and uses a 32-frame offline queue
+The BLE, UART, and Wi-Fi companion builds support up to 150 contacts, reflecting
+the available filesystem space. The BLE companion uses a 32-frame offline queue
 to leave more runtime heap for the ESP32-C3 Bluetooth stack and on-demand Wi-Fi
 updater.
+The BLE build uses an 8 KiB AsyncTCP task stack. It releases the Bluetooth
+stack before starting Wi-Fi to leave RAM for HTTP requests and the upload buffer.
 
 The BLE, UART/`companion_radio_usb`, and Wi-Fi companion builds enable
 `ENABLE_COMPANION_OTA`. Start the updater using either:
@@ -57,7 +61,9 @@ OTA mode. Repeated activation reuses the running updater.
 
 Wi-Fi is started only when OTA is requested on BLE/UART builds. The Wi-Fi
 companion can also keep its existing station connection while the OTA access
-point runs. BLE remains enabled on the BLE companion during OTA.
+point runs. The BLE companion replies to the OTA command, then disconnects BLE
+after one second before starting Wi-Fi. BLE returns after reboot. If OTA startup
+fails, UART reports the error; reboot to restore BLE before retrying.
 
 
 ### Opting in on other targets
