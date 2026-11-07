@@ -150,7 +150,9 @@ public:
       button_handled = true;  // retry only after releasing and holding again
       char reply[128];
       startOTAUpdate(getManufacturerName(), reply);
+#ifndef DAKE_KISS_OTA
       Serial.println(reply);
+#endif
     }
   }
 #endif

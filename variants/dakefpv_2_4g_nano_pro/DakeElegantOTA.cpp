@@ -90,7 +90,9 @@ void AsyncElegantOtaClass::begin(AsyncWebServer *server, const char* username, c
                 int cmd = (filename == "filesystem") ? U_SPIFFS : U_FLASH;
                 if (!Update.begin(UPDATE_SIZE_UNKNOWN, cmd)) { // Start with max available size
             #endif
+#ifndef DAKE_KISS_OTA
                 Update.printError(Serial);
+#endif
                 return request->send(400, "text/plain", "OTA could not begin");
             }
         }
@@ -104,7 +106,9 @@ void AsyncElegantOtaClass::begin(AsyncWebServer *server, const char* username, c
             
         if (final) { // if the final flag is set then this is the last frame of data
             if (!Update.end(true)) { //true to set the size to the current progress
+#ifndef DAKE_KISS_OTA
                 Update.printError(Serial);
+#endif
                 return request->send(400, "text/plain", "Could not end OTA");
             }
         }else{
@@ -126,13 +130,17 @@ void AsyncElegantOtaClass::restart() {
         args.callback = [](void*) { ESP.restart(); };
         args.name = "ota_restart";
         if (esp_timer_create(&args, &restart_timer) != ESP_OK) {
+#ifndef DAKE_KISS_OTA
             Serial.println("OTA: could not schedule restart; reboot manually");
+#endif
             return;
         }
     }
     if (!esp_timer_is_active(restart_timer) &&
         esp_timer_start_once(restart_timer, 1000000) != ESP_OK) {
+#ifndef DAKE_KISS_OTA
         Serial.println("OTA: could not schedule restart; reboot manually");
+#endif
     }
 #else
     yield();

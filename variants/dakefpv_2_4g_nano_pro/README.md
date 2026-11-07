@@ -37,10 +37,7 @@ The process is:
 
 ## Companion firmware updates over Wi-Fi
 
-The BLE, UART, and Wi-Fi companion builds support up to 150 contacts, reflecting
-the available filesystem space. The BLE companion uses a 32-frame offline queue
-to leave more runtime heap for the ESP32-C3 Bluetooth stack and on-demand Wi-Fi
-updater.
+The BLE, UART, and Wi-Fi companion builds support up to 150 contacts, due to limited filesystem space. 
 The BLE build uses an 8 KiB AsyncTCP task stack. It releases the Bluetooth
 stack before starting Wi-Fi to leave RAM for HTTP requests and the upload buffer.
 
@@ -54,16 +51,21 @@ The BLE, UART/`companion_radio_usb`, and Wi-Fi companion builds enable
 The RGB LED turns blue when the updater starts, if `DAKE_RGB_PACKET_LED` is enabled.
 Connect to the open **MeshCore-OTA** Wi-Fi network and open
 **http://192.168.4.1/update** (the CLI also returns the updater URL).
-Select a firmware update and upload `.pio/build/<environment>/firmware.bin`
-for the Dake target. Do not upload the merged serial-flashing image or select a
-filesystem update. The device reboots after the upload; power-cycling also exits
-OTA mode. Repeated activation reuses the running updater.
+Select a firmware update and upload `firmware.bin`
+for the Dake target.
 
 Wi-Fi is started only when OTA is requested on BLE/UART builds. The Wi-Fi
 companion can also keep its existing station connection while the OTA access
 point runs. The BLE companion replies to the OTA command, then disconnects BLE
 after one second before starting Wi-Fi. BLE returns after reboot. If OTA startup
 fails, UART reports the error; reboot to restore BLE before retrying.
+
+## KISS modem firmware updates over Wi-Fi
+
+After startup, hold the user button for five seconds. The LED turns blue when
+OTA starts. Connect to **MeshCore-OTA** and open
+**http://192.168.4.1/update** to upload the Dake `firmware.bin`. Holding the
+button during reset enters the bootloader instead.
 
 
 ### Opting in on other targets
@@ -88,12 +90,9 @@ color's intensity from 0 to 255 (default 16).
 
 - Blue when OTA update is active.
 - Green flashes for 150 ms after a successful, nonempty radio packet read.
-  CRC/read failures do not light it; MeshCore may subsequently reject the
-  packet during protocol validation. Repeated receives restart the flash.
 - Red stays on during transmission and clears on completion or a start error.
   Transmit takes priority over a receive flash.
-- Off when idle. The receive flash uses a timer, with no 150 ms blocking delay,
-  and LED updates run outside interrupts.
+- Off when idle. 
 - Enabling the RGB LED may prevent powersaving sleep being entered for up to 150ms
   after receiving a packet. For maximum power saving, disable the RGB LED.
 

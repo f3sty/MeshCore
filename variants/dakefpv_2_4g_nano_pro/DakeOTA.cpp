@@ -12,11 +12,15 @@ bool DakeBoard::startDakeOTA(const char* id, char reply[]) {
     sprintf(reply, "Started: http://%s/update", WiFi.softAPIP().toString().c_str());
     return true;
   }
+#ifndef DAKE_KISS_OTA
   const uint32_t free_heap = ESP.getFreeHeap();
   const uint32_t largest_block = ESP.getMaxAllocHeap();
+#endif
   if (!WiFi.softAP("MeshCore-OTA", NULL)) {
+#ifndef DAKE_KISS_OTA
     Serial.printf("OTA: Wi-Fi startup failed (before: heap=%u, largest=%u; after: heap=%u, largest=%u)\n",
       free_heap, largest_block, ESP.getFreeHeap(), ESP.getMaxAllocHeap());
+#endif
     strcpy(reply, "Error: could not start OTA Wi-Fi");
     return false;
   }
@@ -42,16 +46,22 @@ bool DakeBoard::startDakeOTA(const char* id, char reply[]) {
   }
   server->begin();
   if (server->state() != LISTEN) {
+#ifndef DAKE_KISS_OTA
     Serial.printf("OTA: HTTP startup failed (heap=%u, largest=%u)\n",
       ESP.getFreeHeap(), ESP.getMaxAllocHeap());
+#endif
     strcpy(reply, "Error: could not start OTA HTTP server");
     return false;
   }
 
   sprintf(reply, "Started: http://%s/update", WiFi.softAPIP().toString().c_str());
+#ifndef DAKE_KISS_OTA
   Serial.printf("OTA: HTTP listening on port 80 (heap=%u, largest=%u)\n",
     ESP.getFreeHeap(), ESP.getMaxAllocHeap());
+#endif
+#ifndef DAKE_KISS_OTA
   MESH_DEBUG_PRINTLN("startOTAUpdate: %s", reply);
+#endif
 
   return true;
 }
