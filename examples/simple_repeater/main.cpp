@@ -124,6 +124,7 @@ void setup() {
 
 void loop() {
   // Handle Serial CLI
+#ifndef UNIFIED_SERIAL_BRIDGE
   int len = strlen(command);
   // `command` must stay NUL-terminated within its bounds. If it ever isn't,
   // strlen() above can return >= sizeof(command) and the loop below would then
@@ -165,6 +166,7 @@ void loop() {
     command[0] = 0;  // reset command buffer
   }
 
+#endif
   board.loop();   // let the board feed its watchdog, run periodic housekeeping
 
 #ifdef ETHERNET_ENABLED

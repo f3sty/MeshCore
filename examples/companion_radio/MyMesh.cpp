@@ -340,7 +340,7 @@ uint8_t MyMesh::getAutoAddMaxHops() const {
 }
 
 void MyMesh::onContactOverwrite(const uint8_t* pub_key) {
-    _store->deleteBlobByKey(pub_key, PUB_KEY_SIZE); // delete from storage
+  _store->deleteBlobByKey(pub_key, PUB_KEY_SIZE); // delete from storage
   if (_serial && _serial->isConnected()) {
     out_frame[0] = PUSH_CODE_CONTACT_DELETED;
     memcpy(&out_frame[1], pub_key, PUB_KEY_SIZE);
@@ -990,7 +990,7 @@ void MyMesh::begin() {
   _prefs.bw = constrain(_prefs.bw, 7.8f, 500.0f);
   _prefs.sf = constrain(_prefs.sf, 5, 12);
   _prefs.cr = constrain(_prefs.cr, 5, 8);
-  _prefs.tx_power_dbm = constrain(_prefs.tx_power_dbm, -9, MAX_LORA_TX_POWER);
+  _prefs.tx_power_dbm = constrain(_prefs.tx_power_dbm, MIN_LORA_TX_POWER, MAX_LORA_TX_POWER);
   _prefs.gps_enabled = constrain(_prefs.gps_enabled, 0, 1);  // Ensure boolean 0 or 1
   _prefs.gps_interval = constrain(_prefs.gps_interval, 0, 86400);  // Max 24 hours
   _prefs.adc_multiplier = constrain(_prefs.adc_multiplier, 0.0f, 10.0f);
@@ -1463,7 +1463,10 @@ void MyMesh::handleCmdFrame(size_t len) {
     }
   } else if (cmd_frame[0] == CMD_SET_RADIO_TX_POWER) {
     int8_t power = (int8_t)cmd_frame[1];
-    if (power < -9 || power > MAX_LORA_TX_POWER) {
+#ifdef LORA_TX_POWER_PROFILE
+    if (power < MIN_LORA_TX_POWER) power = MIN_LORA_TX_POWER;
+#endif
+    if (power < MIN_LORA_TX_POWER || power > MAX_LORA_TX_POWER) {
       writeErrFrame(ERR_CODE_ILLEGAL_ARG);
     } else {
       _prefs.tx_power_dbm = power;
@@ -2110,6 +2113,15 @@ bool MyMesh::handleCommand(const char* command, uint32_t sender_timestamp, char*
     board.reboot(); // doesn't return
     return true;
   }
+
+#ifdef ENABLE_COMPANION_OTA
+  if (strcmp(command, "start ota") == 0) {
+    if (!board.startOTAUpdate(_prefs.node_name, reply)) {
+      strcpy(reply, "Error: OTA unavailable");
+    }
+    return true;
+  }
+#endif
 
   if (strcmp(command, "poweroff") == 0 || strcmp(command, "shutdown") == 0) {
     board.powerOff(); // doesn't return

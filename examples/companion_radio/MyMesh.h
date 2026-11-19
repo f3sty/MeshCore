@@ -53,6 +53,9 @@
 #ifndef MAX_LORA_TX_POWER
 #define MAX_LORA_TX_POWER LORA_TX_POWER
 #endif
+#ifndef MIN_LORA_TX_POWER
+#define MIN_LORA_TX_POWER -9
+#endif
 
 #ifndef MAX_CONTACTS
 #define MAX_CONTACTS 100
@@ -184,7 +187,11 @@ protected:
   void onSendTimeout() override;
 
   // DataStoreHost methods
-  bool onContactLoaded(const ContactInfo& contact) override { return addContact(contact); }
+  bool onContactLoaded(const ContactInfo& contact) override {
+    // Loading a larger saved list must not evict contacts or delete their blobs.
+    if (contact.type != ADV_TYPE_NONE && getNumContacts() >= MAX_CONTACTS) return false;
+    return addContact(contact);
+  }
   bool getContactForSave(uint32_t idx, ContactInfo& contact) override { return getContactByIdx(idx, contact); }
   bool onChannelLoaded(uint8_t channel_idx, const ChannelDetails& ch) override { return setChannel(channel_idx, ch); }
   bool getChannelForSave(uint8_t channel_idx, ChannelDetails& ch) override { return getChannel(channel_idx, ch); }

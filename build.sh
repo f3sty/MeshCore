@@ -55,7 +55,7 @@ EOF
 
 # get a list of pio env names that start with "env:"
 get_pio_envs() {
-  pio project config | grep 'env:' | sed 's/env://'
+  pio project config | grep '^env:' | sed 's/^env://'
 }
 
 # Catch cries for help before doing anything else.
@@ -211,6 +211,8 @@ build_repeater_firmwares() {
 
   # build all repeater firmwares
   build_all_firmwares_by_suffix "_repeater"
+  build_all_firmwares_by_suffix "_repeater_bridge_rs232"
+  build_all_firmwares_by_suffix "_repeater_bridge_espnow"
 
 }
 
@@ -231,6 +233,7 @@ build_companion_firmwares() {
   # build all companion firmwares
   build_all_firmwares_by_suffix "_companion_radio_usb"
   build_all_firmwares_by_suffix "_companion_radio_ble"
+  build_all_firmwares_by_suffix "_companion_radio_wifi"
 
 }
 
@@ -260,6 +263,7 @@ build_firmwares() {
   build_companion_firmwares
   build_repeater_firmwares
   build_room_server_firmwares
+  build_kiss_modem_firmwares
 }
 
 # clean build dir
@@ -297,8 +301,11 @@ elif [[ $1 == "build-kiss-radio-firmwares" ]]; then
 elif [[ $1 == "get-companion-firmwares-to-build" ]]; then
   get_pio_envs_ending_with_string "_companion_radio_usb"
   get_pio_envs_ending_with_string "_companion_radio_ble"
+  get_pio_envs_ending_with_string "_companion_radio_wifi"
 elif [[ $1 == "get-repeater-firmwares-to-build" ]]; then
   get_pio_envs_ending_with_string "_repeater"
+  get_pio_envs_ending_with_string "_repeater_bridge_rs232"
+  get_pio_envs_ending_with_string "_repeater_bridge_espnow"
 elif [[ $1 == "get-room-server-firmwares-to-build" ]]; then
   get_pio_envs_ending_with_string "_room_server"
 fi
